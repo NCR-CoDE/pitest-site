@@ -58,6 +58,16 @@ Note that PIT is a bytecode mutator - it does not compile your code but instead 
 the byte code in memory. Your code must be on the classpath - PIT only requires the location
 of your source code in order to generate a human readable report.
 
+## My tests normally run green but PIT says the suite isn't green
+
+Most comonly this is because either :-
+
+* PIT is picking up tests that are not included/are excluded in the normal test config
+* Some test rely on an environment variable or other property set in the test config, but not set in the pitest config
+* The tests have a hidden order dependency that is not revealed during the normal test run 
+
+If you are using an unusual or custom JUnit runner this can also sometimes causes problems. To make things fast PIT does some tricksy stuff to split your tests into small independent units. This works well with most JUnit runners but if you encounter one where it doesn't please post to the user group. 
+
 ## Will PIT work with my mocking framework?
 
 PIT is tested against the major mocking frameworks as part of its build. 
@@ -125,7 +135,7 @@ to a large value with **--timeoutConst** (**timeoutConstant** in maven).
 Java 7 introduced stricter requirements for verifying stack frames, which caused issues in
 earlier versions of PIT. It is believed that there were all resolved in 0.29.
 
-If you are using 0.29 and see a verify error, please raise a defect. The issue can be worked around
+If you see a verify error, please raise a defect. The issue can be worked around
 by passing -XX:-UseSplitVerifier to the child jvm processes that PIT launches using the **jvmArgs** option. 
 
 ## How does PIT compare the mutation testing system X
@@ -140,8 +150,7 @@ If so this is due to the way in which the java compiler handles finally blocks. 
 a copy of the contents of the finally block for each possible exit point. PIT creates seperate mutations for each of
 the copied blocks. Most test suites are only able to kill one of these mutations.
 
-As of 0.28 PIT contains experimental support for detecting inlined code. To activate it add the **detectInlinedCode** option to your
-your configuration. 
+As of 0.28 PIT contains experimental support for detecting inlined code that is now active by default.
 
 ## Can I activate more mutators without relisting all the default ones?
 
@@ -199,10 +208,11 @@ See [PIT Gradle plugin](http://gradle-pitest-plugin.solidsoft.info/)
 
 ## Is there any IDE integration?
 
-The only IDE integration at present is the work Phil Glover has done towards an eclipse plugin
-[Pitclipse](https://github.com/philglover/pitclipse).
+Phil Glover maintains an Eclipse plugin. [Pitclipse](https://github.com/philglover/pitclipse)
 
-It is however possible to launch PIT from most IDEs as a Java application.
+Michal Jedynak maintains an IntelliJ plugin. [PIT intellij plugin](http://plugins.intellij.net/plugin/?idea&pluginId=7119)
+
+It is also possible to launch PIT from most other IDEs as a Java application.
 
 ## I'd like to help out, what can I do?
 

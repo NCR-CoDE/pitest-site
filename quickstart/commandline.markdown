@@ -15,16 +15,20 @@ Download the pitest-command-line and pitest jars and place them somewhere conven
 
 ## Getting started
 
+It recommended that you use one of the provided build system plugins instead of the commandline tool. The build plugins are easier to use and you are much less likely to encounter configuration problems. 
+
+Please only use the commandline tool if you have a really good reason to do so.
+
 A mutation coverage report can be launched from the command line as follows
 
-<pre class="prettyprint lang-bash">
+```
 java -cp &lt;your classpath including pit jar and dependencies&gt; \
     org.pitest.mutationtest.commandline.MutationCoverageReport \
     --reportDir <outputdir> \
     --targetClasses com.your.package.tobemutated* \
     --targetTests com.your.packge.*
-    --sourceDirs <pathtosource> \
-</pre>
+    --sourceDirs <pathtosource>
+```
 
 The command line jar, core pitest jar and either JUnit or TestNG will need to be on the classpath. 
 
@@ -53,16 +57,15 @@ The classes to be mutated. This is expressed as a comma separated list of globs.
 
 For example
 
-<pre class="prettyprint lang-bash">
+```
 com.mycompany.*
-</pre>
+```
 
 or
 
-<pre class="prettyprint lang-bash">
+```
 com.mycompany.package.*, com.mycompany.packageB.Foo, com.partner.*
-</pre>
-
+```
 
 ### \--targetTests
 
@@ -200,19 +203,13 @@ candidate for mutation.
 PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
 
 
-### \--includedTestNGGroups
+### \--includedGroups
 
-Comma separated list of TestNG groups to include in mutation analysis.
+Comma separated list of TestNG groups/JUnit categories to include in mutation analysis. Note that only class level categories are supported.
 
-### \--excludedTestNGGroups
+### \--excludedGroups
 
-Comma separated list of TestNG groups to exclude from mutation analysis
-
-### \--configFile (experimental)
-
-Separate config file from which to PIT configuration. If supplied all other parameters will be ignore and the content of this file used.
-
-*TODO - document the format.*
+Comma separated list of TestNG groups/JUnit categories to exclude from mutation analysis. Note that only class level categories are supported.
 
 ### \--detectInlinedCode
 
@@ -226,20 +223,20 @@ In the case of any doubt PIT will act cautiously and assume that the code is not
 
 This will be detected as two separate inlined instructions
 
-<pre class="prettyprint lang-java">
+```java
 finally {
   int++;
   int++;
 }
-</pre>
+```
 
 But this will look confusing so PIT will assume no in-lining is taking place.
 
-<pre class="prettyprint lang-java">
+```java
 finally {
   int++; int++;
 }
-</pre>
+```
 
 This sort of pattern might not be common with integer addition, but things like string concatenation are likely to produce multiple similar instructions on the same line.
 
@@ -270,7 +267,7 @@ Path to write history information for incremental analysis. May be the same as h
 
 ### Mutate all classes in package example.foo (and sub pacakges) in two threads potentially using any test on class path but do not mutate hashCode or equals methods
 
-<pre class="prettyprint lang-bash">
+```
 java -cp &lt;your classpath&gt; \
      org.pitest.mutationtest.commandline.MutationCoverageReport \
     --reportDir c:\\mutationReports \
@@ -279,16 +276,15 @@ java -cp &lt;your classpath&gt; \
     --targetTests example.foo*
     --threads 2
     --excludedMethods hasCode,equals
-</pre>
+```
 
 ### Mutate the classes example.foo.Specific and example.foo.Other using tests from the Suite example.ReflectionSuite that directly call the mutees
 
-<pre class="prettyprint lang-bash">
+```
 java -cp &lt;your classpath&gt; \
      org.pitest.mutationtest.commandline.MutationCoverageReport \
     --reportDir c:\\mutationReports \
     --targetClasses example.foo.Specfic, example.foo.Other \
     --targetTests example.ReflectionSuite
     --sourceDirs c:\\myProject\\src \
-    --dependencyDistance 0
-</pre>
+```    

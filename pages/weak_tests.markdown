@@ -18,9 +18,9 @@ In most cases the tests that have been written are sufficient to generate 100% b
 
 ## The untested side effect
 
-<pre class="prettyprint lang-java">
+```java
 public static String foo(boolean b) {
-  if ( someLogic(i) ) {
+  if ( b ) {
     performVitallyImportantBusinessFunction();
     return "OK";
   }
@@ -37,13 +37,13 @@ public void shouldFailWhenGivenFalse() {
 public void shouldBeOkWhenGivenTrue() {
   assertEquals("OK", foo(true));
 }
-</pre>
+```
 
 *No check is ever made that performVitallyImportantBusinessFunction is called.*
 
 ## The missing boundary test
 
-<pre class="prettyprint lang-java">
+```java
 public static String foo(int i) {
   if ( i >= 0 ) {
       return "foo";
@@ -53,21 +53,21 @@ public static String foo(int i) {
 }
 
 @Test
-public void shouldReturnBarWhenGiven1() {
-  assertEquals("bar", foo(1));
+public void shouldReturnFooWhenGiven1() {
+  assertEquals("foo", foo(1));
 }
 
 @Test
-public void shouldReturnFooWhenGivenMinus1() {
-  assertEquals("foo", foo(-1));
+public void shouldReturnBarWhenGivenMinus1() {
+  assertEquals("bar", foo(-1));
 }
-</pre>
+```
 
 *The behaviour when i == 0 is never tested.*
 
 ## The myopic mockist
 
-<pre class="prettyprint lang-java">
+```java
 public static String foo(Collaborator c, boolean b) {
   if ( b ) {
       return c.performAction();
@@ -87,7 +87,7 @@ public void shouldNotPerformActionWhenGivenFalse() {
   foo(mockCollaborator,false);
   verify(never(),mockCollaborator).performAction();
 }
-</pre>
+```
 
 *The return value of the function is never checked.*
 

@@ -12,7 +12,7 @@ permalink: /quickstart/maven/
 ## Installation
 
 PIT is available from [maven central](http://search.maven.org/#search|ga|1|a%3A%22pitest-maven%22) and
-[jcenter](https://bintray.com/bintray/jcenter/org.pitest%3Apitest-maven/view) as of version 0.20.
+[jcenter](https://bintray.com/hcoles/maven/org.pitest%3Apitest-maven/view) since version 0.20.
 
 ## Getting started
 
@@ -50,6 +50,11 @@ mvn org.pitest:pitest-maven:mutationCoverage
 
 This will output an html report to **target/pit-reports/YYYYMMDDHHMI**.
 
+To speed-up repeated analysis of the same codebase set the `withHistory` parameter to true.
+
+<pre class="prettyprint lang-bash">
+mvn -DwithHistory org.pitest:pitest-maven:mutationCoverage
+</pre>
 
 ### scmMutationCoverage goal
 
@@ -100,25 +105,10 @@ or
 
 ### targetTests
 
-A list of globs can be supplied to this parameter to limit the tests available to be run. If this parameter is not supplied
-then any test fixture that matched inScopeClasses may be used.
+A list of globs can be supplied to this parameter to limit the tests available to be run.
 
 This parameter can be used to point PIT to a top level suite or suites. Custom suites such as [ClassPathSuite](http://johanneslink.net/projects/cpsuite.jsp) 
 are supported. Tests found via these suites can also be limited by the distance filter (see below).
-
-### <del>inScopeClasses</del> (removed in 0.27)
-
-<del>The inScopeClasses and targetClasses parameters look confusingly similar. Both are
-lists of globs that will be matched against the names of classes on your classpath.</del>
-
-<del>Only classes that match the inScopeClasses globs will be considered as runnable tests or mutable classes. If you
-have a large classpath to scan this parameter can be used to limit the classes that are examined (and therefore loaded).</del>
-
-<del>The targetClasses globs are then used to filter out a subset of these classes which will be considered
-for mutation.</del>
-
-<del>In practice inScopeClasses and targetClasses are often then same. If you don't specify them explicitly then PIT will construct a
-glob from the project's group id of the form. group.id.*</del>
 
 ### maxDependencyDistance
 
@@ -180,6 +170,18 @@ packages as follows
 * org.slf4j
 * org.apache.commons.logging
 
+So, the configuration section must look like:
+
+<pre class="prettyprint lang-xml">
+&lt;avoidCallsTo&gt;
+    &lt;avoidCallsTo&gt;java.util.logging&lt;/avoidCallsTo&gt;
+    &lt;avoidCallsTo&gt;org.apache.log4j&lt;/avoidCallsTo&gt;
+    &lt;avoidCallsTo&gt;org.slf4j&lt;/avoidCallsTo&gt;
+    &lt;avoidCallsTo&gt;org.apache.commons.logging&lt;/avoidCallsTo&gt;
+&lt;/avoidCallsTo&gt;
+</pre>
+
+
 ### verbose
 
 Output verbose logging. Defaults to off/false.
@@ -199,7 +201,9 @@ Defaults to 3000
 
 ### maxMutationsPerClass
 
-The maximum number of mutations to create per class. Use 0 or -ve number to set no limit.
+The maximum number of mutations to create per class. Use 0 or -ve number to set no limit. 
+
+Defaults to 0 (unlimited)
 
 ### jvmArgs
 
@@ -319,3 +323,114 @@ Path to a file containing history information for [incremental analysis](/quicks
 ### historyOutputFile
 
 Path to write history information for [incremental analysis](/quickstart/incremental_analysis/). May be the same as historyInputFile.
+
+### withHistory
+
+Sets the history input and output files to point a project specific file within the temp directory.
+
+This is a convenient way of using history files to speed up local analysis.
+
+### skip
+
+You can skip the launch by adding the parameter ``skip`` on ``configuration`` section:
+
+<pre class="prettyprint lang-xml">
+&lt;configuration&gt;
+    &lt;skip&gt;true&lt;/skip&gt;
+&lt;/configuration&gt;
+</pre>
+
+It's very useful on maven module: when you need to skip an entire module, you can add this setting on the declaration of the plugin to ignore it.
+
+## Reporting Goal
+### Introduction
+Starting with version 1.1.6, the pit maven plugin has a maven report goal.  This goal should only be invoked as part of the maven site lifecycle.  To execute this goal, the ``mutationCoverage`` goal must have already been executed to produce an HTML report (i.e. the ``outputFormat`` parameter must have HTML in it if the parameter is specified.  The report goal then copies the latest HTML report to the site directory.  If multiple reports exist (as in the case where ``timestampedReports`` is set to true), then only the report with the latest create time is used.
+
+To generate the pit site report, set up the pitest-maven plugin in the project's pom as explained in the Getting Started section above and the ``<reporting>`` section as explained below.  Then, execute both the ``mutationCoverage`` goal and the site lifecycle.  For example:
+<pre class="prettyprint lang-xml">
+mvn clean org.pitest:pitest-maven:mutationCoverage site
+</pre>
+
+### POM Configuration
+The following configuration is the minimum required to generate the pit site report:
+<pre class="prettyprint lang-xml">
+&lt;reporting&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.pitest&lt;/groupId&gt;
+            &lt;artifactId&gt;pitest-maven&lt;/artifactId&gt;
+            &lt;version&gt;LATEST&lt;/version&gt;
+            &lt;reportSets&gt;
+                &lt;reportSet&gt;
+                    &lt;reports&gt;
+                        &lt;report&gt;report&lt;/report&gt;
+                    &lt;/reports&gt;
+                &lt;/reportSet&gt;
+            &lt;/reportSets&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/reporting&gt;
+</pre>
+
+#### Additional Parameters
+Additional parameters exist to customize the generation of the report.  They are:
+
+##### skip
+* Boolean indicating if the report generation should be skipped.
+* Default is ``false``
+* User Property is ``${pit.report.skip}``
+
+##### reportsDirectory
+* Indicates where the ``mutationCoverage`` goal wrote the pit HTML reports.  This parameter does not need to be set unless the ``reportsDirectory`` parameter was set during the execution of the ``mutationCoverage`` goal.  The value in this parameter must be an absolute path to the directory where the pit HTML report is located.
+* Default is ``${project.build.directory}/pit-reports``
+* User property is ``${reportsDirectory}``
+
+##### sourceDataFormats
+* List of strings specifying what data files should be read for the generation of the site report.  Currently, the only supported value is "HTML" thus this parameter should not be used.  Future versions of the pitest-maven plugin may implement other source data formats (i.e. XML or CSV).
+* Default is "HTML"
+* User property is ``${pit.report.sourceDataFormats}``
+
+##### siteReportName
+* String that determines the name of the pit report that displays in the "Project Reports" section of the generated maven site.
+* Default is "PIT Test Report"
+* User property is ``${pit.report.name}``
+
+##### siteReportDescription
+* String that determines the "Description" of the pit report in the "Project Reports" section of the generated maven site.
+* Default is "Report of the pit test coverage"
+* User property is ``${pit.report.description}``
+
+##### siteReportDirectory
+* String that determines the name of the sub-directory under the directory where the maven site is written (usually target/site). 
+* Default value is "pit-reports" which means the pit report will be written to ``target/site/pit-reports``
+* User property is ``${pit.report.outputdir}``
+
+##### Example Showing All Options
+<pre class="prettyprint lang-xml">
+&lt;reporting&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.pitest&lt;/groupId&gt;
+            &lt;artifactId&gt;pitest-maven&lt;/artifactId&gt;
+            &lt;version&gt;LATEST&lt;/version&gt;
+            &lt;configuration&gt;
+                &lt;skip&gt;false&lt;/skip&gt;
+                &lt;reportsDirectory&gt;${project.build.directory}/pit-custom-output-dir&lt;/reportsDirectory&gt;
+                &lt;sourceDataFormats&gt;
+                    &lt;sourceDataFormat&gt;HTML&lt;/sourceDataFormat&gt;
+                &lt;/sourceDataFormats&gt;
+                &lt;siteReportName&gt;my-pit-report-name&lt;/siteReportName&gt;
+                &lt;siteReportDescription&gt;my pit report custom description&lt;/siteReportDescription&gt;
+                &lt;siteReportDirectory&gt;pit-custom-site-directory&lt;/siteReportDirectory&gt;
+            &lt;/configuration&gt;
+            &lt;reportSets&gt;
+                &lt;reportSet&gt;
+                    &lt;reports&gt;
+                        &lt;report&gt;report&lt;/report&gt;
+                    &lt;/reports&gt;
+                &lt;/reportSet&gt;
+            &lt;/reportSets&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/reporting&gt;
+</pre>
